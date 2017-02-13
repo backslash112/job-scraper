@@ -1,1 +1,1 @@
-# job-spider
+# job-scraper
