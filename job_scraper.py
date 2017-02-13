@@ -76,7 +76,7 @@ class JobScraper(object):
         # print("next_page: ", next_page.text)
         next_page.click()
         # print("click the next page button...")
-        time.sleep(3)
+        time.sleep(1)
         print("get_current_page_number: ", self.get_current_page_number())
 
     def get_current_page_number(self):
@@ -95,7 +95,7 @@ class JobScraper(object):
         while self.get_current_page_number() == prev_page_number + 1:
             prev_page_number = self.get_current_page_number()
             self.focus_pager()
-            time.sleep(1)
+            time.sleep(0.3)
             self.click_next_page_button()
             job_links = self.get_job_links()
             title_job_links += job_links
@@ -137,21 +137,23 @@ class JobScraper(object):
         # bsObj = BeautifulSoup(html)
         pass
 
-def save_to_csv(title, list):
+def save_to_csv(title, job_urls):
     with open('{0}-links.csv'.format(title), 'w', newline='') as fp:
-        a = csv.writer(fp)
+        a = csv.writer(fp, delimiter="\n")
+        # a = csv.writer(fp)
         a.writerow([title])
-        a.writerows(list)
+        a.writerows([job_urls])
 
 def run():
     job_scraper = JobScraper()
     job_scraper.open_main_page()
     all_job_links = []
-    titles = ['技术合伙人', '技术总监', '技术经理', '架构师', '高级软件', '高级开发', '开发工程师', '软件工程师', 'Python', '爬虫', '程序员', '研发']
+    titles = ['技术经理', '技术总监', '架构师', '高级软件', '高级开发', '开发工程师', '软件工程师', 'Python', '爬虫', '程序员', '研发']
     for title in titles:
         title_job_links = job_scraper.get_job_links_with_title(title)
         save_to_csv(title, title_job_links)
         job_scraper.back_to_main_page()
+
 
 if __name__ == "__main__":
     run()
