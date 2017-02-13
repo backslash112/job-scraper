@@ -63,11 +63,15 @@ class JobScraper(object):
             job_link = job_element.get_attribute("href")
             print(job_link)
             job_links.append(job_link)
-            time.sleep(1)
+            time.sleep(0.1)
+
+    def focus_pager(self):
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
     def click_next_page_button(self):
         # Click the next page
         next_page = self.driver.find_element_by_class_name('pager_next')
+        print("next_page: ", next_page.text)
         next_page.click()
         print("click the next page button...")
         time.sleep(5)
@@ -87,6 +91,8 @@ class JobScraper(object):
         prev_page_number = 0
         while self.get_current_page_number() == prev_page_number + 1:
             prev_page_number = self.get_current_page_number()
+            self.focus_pager()
+            time.sleep(1)
             self.click_next_page_button()
             self.get_job_links()
 
@@ -134,7 +140,7 @@ def run():
     for title in titles:
         job_links = job_scraper.get_job_links_with_title(title)
         all_job_links += job_links
-        job_links.back_to_main_page()
+        job_scraper.back_to_main_page()
 
 
 if __name__ == "__main__":
