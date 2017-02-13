@@ -11,6 +11,7 @@ from urllib.request import urlopen
 import ssl
 from scrapy.selector import Selector
 import time
+import csv
 
 class JobScraper(object):
     "Job Scraper Object"
@@ -44,7 +45,7 @@ class JobScraper(object):
             # self.search_with_titles()
 
     def back_to_main_page(self):
-        print("back to the main page...")
+        # print("back to the main page...")
         self.driver.back()
 
     # def search_with_titles():
@@ -64,6 +65,7 @@ class JobScraper(object):
             print(job_link)
             job_links.append(job_link)
             time.sleep(0.1)
+        return job_links
 
     def focus_pager(self):
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -71,10 +73,10 @@ class JobScraper(object):
     def click_next_page_button(self):
         # Click the next page
         next_page = self.driver.find_element_by_class_name('pager_next')
-        print("next_page: ", next_page.text)
+        # print("next_page: ", next_page.text)
         next_page.click()
-        print("click the next page button...")
-        time.sleep(5)
+        # print("click the next page button...")
+        time.sleep(3)
         print("get_current_page_number: ", self.get_current_page_number())
 
     def get_current_page_number(self):
@@ -82,26 +84,29 @@ class JobScraper(object):
         return int(current_page.text)
 
     def get_job_links_with_title(self, title):
-        job_links = []
         self.driver.find_element_by_id('search_input').send_keys(title)
         self.driver.find_element_by_id('search_button').click()
         print("Search with {0}".format(title))
 
-        self.get_job_links()
+        title_job_links = []
+        job_links = self.get_job_links()
+        title_job_links += job_links
         prev_page_number = 0
         while self.get_current_page_number() == prev_page_number + 1:
             prev_page_number = self.get_current_page_number()
             self.focus_pager()
             time.sleep(1)
             self.click_next_page_button()
-            self.get_job_links()
+            job_links = self.get_job_links()
+            title_job_links += job_links
 
-        return job_links
+        return title_job_links
 
 
     def open_job(self, url):
         html = urlopen(url)
         self.parse_job(html.read())
+
     def parse_job(self, body):
         response = Selector(text=body)
         job_id = response.xpath('//input[@id="jobid"]/@value').extract_first()
@@ -132,16 +137,21 @@ class JobScraper(object):
         # bsObj = BeautifulSoup(html)
         pass
 
+def save_to_csv(title, list):
+    with open('{0}-links.csv'.format(title), 'w', newline='') as fp:
+        a = csv.writer(fp)
+        a.writerow([title])
+        a.writerows(list)
+
 def run():
     job_scraper = JobScraper()
     job_scraper.open_main_page()
     all_job_links = []
-    titles = ['技术总监', '技术经理', '架构师', '高级软件', '高级开发', '开发工程师', '软件工程师', 'Python', '爬虫', '程序员', '研发']
+    titles = ['技术合伙人', '技术总监', '技术经理', '架构师', '高级软件', '高级开发', '开发工程师', '软件工程师', 'Python', '爬虫', '程序员', '研发']
     for title in titles:
-        job_links = job_scraper.get_job_links_with_title(title)
-        all_job_links += job_links
+        title_job_links = job_scraper.get_job_links_with_title(title)
+        save_to_csv(title, title_job_links)
         job_scraper.back_to_main_page()
-
 
 if __name__ == "__main__":
     run()
